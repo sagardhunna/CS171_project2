@@ -23,33 +23,65 @@ class PuzzleGenerator:
 
     # FUNCTION THAT WE ARE IMPLEMENTING TO GENERATE A GOOD PUZZLE
     def generate_puzzle(self) -> Puzzle:
-        random_walk_time = 60.0
+        random_walk_time = 60.0 
         
         s = Puzzle(self.n_rows, self.n_columns, self.min_val, self.max_val)
         
         best_puzzle = s
         best_value = s.get_value()
                 
-        t_value = random_walk_time
+        t_value = 100
         
-        alpha =  0.75
+        alpha =  0.9995
         
         
         start_time = time.time()
+        total_iterations = 0
+        taken_worse = 0
+        iterations_less_than_300 = 0
+        random_restarts = 0
                 
         while time.time() - start_time < random_walk_time - 0.1:
             s_prime = s.get_random_successor()
+            s_prime
+                
+            
             delta_e = s_prime.get_value() - s.get_value()
             
-            if delta_e > 0 or random.random() < math.exp(delta_e / t_value):
+            rand = random.random()
+            if delta_e / t_value <= 500:
+                e = math.exp(delta_e / t_value)
+            
+            if delta_e > 0:
                 s = s_prime
                 if s.get_value() > best_value:
                     best_value = s.get_value()
                     best_puzzle = s
+            elif rand < e:
+                taken_worse += 1
+                s = s_prime
+                
                     
             t_value *= alpha
+            
+            if t_value <= 0.01: 
+                t_value = 100
                 
-        
+            if best_value <= 300: 
+                iterations_less_than_300 += 1
+            
+            if iterations_less_than_300 >= 4000 and self.n_columns > 5:
+                s = Puzzle(self.n_rows, self.n_columns, self.min_val, self.max_val)
+                iterations_less_than_300 = 0
+                random_restarts += 1
+                
+            if s.get_value() > best_value:
+                best_value = s.get_value()
+                best_puzzle = s
+            
+            total_iterations += 1
+                
+        print(f'Total iterations: {total_iterations} -- Taken worse: {taken_worse} -- Taken better: {total_iterations - taken_worse} -- random restarts : {random_restarts} ')
         return best_puzzle
 
     # PROVIDED FUNCTION ALREADY GENERATES BETTER THAN AVERAGE PUZZLES, look at source code
